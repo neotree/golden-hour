@@ -1,0 +1,25 @@
+# ---- Patient data: NEVER commit ----
+00-DATA/
+*.csv
+*.xlsx
+*.xls
+
+# ---- Generated outputs ----
+03-OUTPUTS/
+*.png
+*.pdf
+*.log
+*_log.txt
+
+# ---- R session / project cruft ----
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+*.Rproj
+
+# ---- OS / editor ----
+.DS_Store
+Thumbs.db
+*~
+.vscode/

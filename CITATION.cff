@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use this analysis code, please cite it as below."
+title: "Golden Hour intervention at Sally Mugabe Central Hospital — analysis code"
+abstract: >-
+  R analysis scripts for the evaluation of a Golden Hour quality-improvement
+  intervention (delayed cord clamping and early skin-to-skin care) in the
+  neonatal service at Sally Mugabe Central Hospital, Harare, Zimbabwe, using
+  routinely collected NeoTree and maternal delivery-log data. Code only; no
+  patient data are included.
+type: software
+authors:
+  - family-names: "de Lorenzo"
+    given-names: "David"
+    email: "drdelorenzo@gmail.com"
+  # - family-names: "Poffley"
+  #   given-names: "Rachel"
+  # - add remaining co-authors here
+license: MIT
+version: "1.0.0"
+date-released: "2026-06-16"
+repository-code: "https://github.com/<your-org-or-user>/neotree-golden-hour"
+keywords:
+  - neonatology
+  - quality improvement
+  - delayed cord clamping
+  - skin-to-skin care
+  - interrupted time series
+  - NeoTree
+  - Zimbabwe
