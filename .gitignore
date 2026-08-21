@@ -1,15 +1,20 @@
 # ---- Patient data: NEVER commit ----
-00-DATA/
-*.csv
-*.xlsx
-*.xls
+input/*.csv
+input/*.xlsx
+input/*.xls
 
 # ---- Generated outputs ----
-03-OUTPUTS/
-*.png
-*.pdf
-*.log
-*_log.txt
+output/**
+!output/.gitkeep
+
+# ---- Transient symlinks created by run_all.R at run time ----
+# (these point at input/ and output/ so scripts find the sibling dirs they
+#  expect; run_all.R recreates them on every run, they should never be
+#  committed as either symlinks or, on platforms without symlink support,
+#  as copied directories)
+/00-DATA
+/03-OUTPUTS
+scripts/outputs
 
 # ---- R session / project cruft ----
 .Rproj.user/

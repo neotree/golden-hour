@@ -5,7 +5,7 @@ abstract: >-
   R analysis scripts for the evaluation of a Golden Hour quality-improvement
   intervention (delayed cord clamping and early skin-to-skin care) in the
   neonatal service at Sally Mugabe Central Hospital, Harare, Zimbabwe, using
-  routinely collected NeoTree and maternal delivery-log data. Code only; no
+  routinely collected Neotree and maternal delivery-log data. Code only; no
   patient data are included.
 type: software
 authors:
@@ -17,13 +17,12 @@ authors:
   # - add remaining co-authors here
 license: MIT
 version: "1.0.0"
-date-released: "2026-06-16"
-repository-code: "https://github.com/<your-org-or-user>/neotree-golden-hour"
+date-released: "2026-08-21"
+repository-code: "https://github.com/neotree/golden-hour"
 keywords:
   - neonatology
   - quality improvement
   - delayed cord clamping
   - skin-to-skin care
-  - interrupted time series
-  - NeoTree
+  - Neotree
   - Zimbabwe
