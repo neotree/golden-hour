@@ -24,7 +24,6 @@ from.
 | Table 5 — Characteristics of the eligible NICU cohort, by intervention group | `17_eligible_cohort_tables.R` | `17a_table2_characteristics.csv`, `17c_table3_outcomes.csv` |
 | Table 6 — Sensitivity analysis, 1500-2499g subgroup | `18_outcome_or_and_sensitivity.R` | `18c_or_counts.csv` |
 | Appendix — cohort-flow numbers (22,036 -> 4,860 -> 3,090 -> 1,794 -> 1,654) | `16_data_readiness_checks.R`, `17_eligible_cohort_tables.R` | `16a_completeness.csv`, `16b_readiness_summary.csv` |
-| Limitations paragraph — reference-group sensitivity (delivinter-known 37.6%->57.7%, Neither mortality 9.3%->8.2%) | `19_reference_group_sensitivity.R` | `19a_reference_group_sensitivity.csv` |
 
 ## Figures
 

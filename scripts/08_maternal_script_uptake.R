@@ -8,7 +8,7 @@
 #   The original intervention window was November 2024 - October 2025 (12 months).
 #   At the 2026-05-19 project meeting it was decided to extend the analysis to
 #   March 2026 to use all available data from both the NeoTree master file
-#   (ZIM_db_master_joined_to_20260401.csv) and the maternal outcomes extract
+#   (ZIM_db_master_joined_to_20260525.csv) and the maternal outcomes extract
 #   (zim_db_maternal_outcomes_20260501_cleaned.csv).
 #
 #   Part A -- NeoTree data (inborn neonatal admissions):
@@ -34,7 +34,7 @@
 #   not recorded or "U") are flagged separately but retained in totals.
 #
 # DATA SOURCES:
-#   (A) ZIM_db_master_joined_to_20260401.csv  (NeoTree master)
+#   (A) ZIM_db_master_joined_to_20260525.csv  (NeoTree master)
 #   (B) zim_db_maternal_outcomes_20260501_cleaned.csv  (maternal outcomes)
 #
 # NOTE ON "INBORN" IN THE MATERNAL OUTCOME SCRIPT:
@@ -82,7 +82,7 @@ if (length(script_flag) > 0) {
 # -- Path configuration -------------------------------------------------------
 NEOTREE_DATA <- normalizePath(
   file.path(SCRIPT_DIR, "..", "00-DATA",
-            "ZIM_db_master_joined_to_20260401.csv"),
+            "ZIM_db_master_joined_to_20260525.csv"),
   mustWork = FALSE
 )
 

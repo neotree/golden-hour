@@ -47,20 +47,19 @@ golden-hour/
 ├── FIGURE_TABLE_SOURCES.md    # provenance map: manuscript element -> script -> output
 ├── run_all.R                  # runs every script end-to-end
 ├── .gitignore                 # excludes data, outputs, R session files
-├── scripts/                   # all 12 R analysis scripts
+├── scripts/                   # all 11 R analysis scripts
 │   ├── 01_descriptive_overview.R
 │   ├── 03_temperature_trends.R
 │   ├── 08_maternal_script_uptake.R
 │   ├── 16_data_readiness_checks.R
 │   ├── 17_eligible_cohort_tables.R
 │   ├── 18_outcome_or_and_sensitivity.R
-│   ├── 19_reference_group_sensitivity.R
 │   ├── 20_forest_table4.R
 │   ├── 23_table1_maternal_uptake_12mo.R
 │   ├── 24_csection_monthly_uptake.R
 │   ├── 25_documentation_all_babies.R
 │   └── 27_lbw_monthly_uptake.R
-├── input/                     # you provide the 3 confidential data files here
+├── input/                     # you provide the 2 confidential data files here
 │   └── README.md              # exact filenames expected
 └── output/                    # created automatically when run_all.R runs
 ```
@@ -91,7 +90,7 @@ and the relevant ethics/governance approvals**.
 ## How to run
 
 1. **Install R** (the analyses were run on **R 4.6**, tidyverse 2.0.0).
-2. **Place the 3 required data files** in `input/` — see
+2. **Place the 2 required data files** in `input/` — see
    [input/README.md](input/README.md) for exact filenames.
 3. From the repository root:
 
@@ -101,7 +100,7 @@ and the relevant ethics/governance approvals**.
 
    `run_all.R` installs any missing R packages automatically, checks `input/`
    has everything it needs (and stops with a clear message listing exactly
-   what's missing if not), runs all 12 scripts in dependency order, and
+   what's missing if not), runs all 11 scripts in dependency order, and
    writes every output under `output/`. It continues past a script that
    errors rather than aborting the whole run, and prints a succeeded/failed
    summary at the end.
@@ -121,11 +120,8 @@ its numeric outputs so a full record of every run is captured.
   Apgar score above 6. Resuscitation type was assessed as a possible
   additional exclusion but not used, as it was incompletely recorded
   (present for 16.0% of the cohort).
-- Two data extracts of the Neotree master file are used, dated
-  20260401 and 20260525 — see `input/README.md` for which script uses which,
-  and `19_reference_group_sensitivity.R` for the sensitivity analysis
-  quantifying the difference between them (quoted in the manuscript's
-  Limitations paragraph).
+- All scripts read a single Neotree master extract,
+  `ZIM_db_master_joined_to_20260525.csv` — see `input/README.md`.
 - The **mortality odds ratios are observational** and the study was not
   powered to detect a mortality effect; all reported confidence intervals
   cross 1.

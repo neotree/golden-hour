@@ -3,7 +3,7 @@
 # run_all.R -- reproduce every table and figure in the manuscript
 # =============================================================================
 # Usage:
-#   1. Place the 3 required data files in input/ (see input/README.md).
+#   1. Place the 2 required data files in input/ (see input/README.md).
 #   2. From the repo root: Rscript run_all.R
 #   3. Every output lands under output/ -- see FIGURE_TABLE_SOURCES.md for
 #      which file corresponds to which manuscript table/figure.
@@ -14,10 +14,10 @@
 #   itself using one of two conventions:
 #     (a) 01, 03, 08            -> reads  ../00-DATA/<file>
 #                                -> writes ../03-OUTPUTS/
-#     (b) 16,17,18,19,20,23,24,25,27 (August scripts)
+#     (b) 16,17,18,20,23,24,25,27 (August scripts)
 #                                -> reads  ../00-DATA/<file>
 #                                -> writes ./outputs/<subfolder>/
-#   Rather than edit 12 scripts by hand (two path dialects, easy to typo one),
+#   Rather than edit 11 scripts by hand (two path dialects, easy to typo one),
 #   this file creates 3 symlinks so every script finds exactly the sibling
 #   directory it already expects, pointing at input/ and output/. No script
 #   in scripts/ is modified.
@@ -60,10 +60,9 @@ invisible(lapply(REQUIRED_PACKAGES, function(p)
 cat("All packages loaded.\n")
 
 # -----------------------------------------------------------------------------
-# 1. Check input/ has the 3 required data files
+# 1. Check input/ has the 2 required data files
 # -----------------------------------------------------------------------------
 REQUIRED_DATA_FILES <- c(
-  "ZIM_db_master_joined_to_20260401.csv",
   "ZIM_db_master_joined_to_20260525.csv",
   "zim_db_maternal_outcomes_20260501_cleaned.csv"
 )
@@ -86,7 +85,7 @@ if (!all(present)) {
     call. = FALSE
   )
 }
-cat("All 3 required data files found.\n")
+cat("All required data files found.\n")
 
 # -----------------------------------------------------------------------------
 # 2. Wire up the path redirection (see header comment) -- symlinks, with a
@@ -133,7 +132,6 @@ SCRIPTS_IN_ORDER <- c(
   "16_data_readiness_checks.R",
   "17_eligible_cohort_tables.R",
   "18_outcome_or_and_sensitivity.R",
-  "19_reference_group_sensitivity.R",
   "20_forest_table4.R",
   "23_table1_maternal_uptake_12mo.R",
   "24_csection_monthly_uptake.R",
