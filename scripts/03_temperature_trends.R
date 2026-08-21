@@ -40,7 +40,7 @@ if (length(script_flag) > 0) {
 # -- Path configuration -------------------------------------------------------
 DATA_PATH <- normalizePath(
   file.path(SCRIPT_DIR, "..", "00-DATA",
-            "ZIM_db_master_joined_to_20260401.csv"),
+            "ZIM_db_master_joined_to_20260525.csv"),
   mustWork = FALSE
 )
 
@@ -78,7 +78,14 @@ cat("Loading data...\n")
 # guess_max = 100000: sample up to 100k rows for type-guessing so that
 # mixed-type columns whose problem values fall after row 1000 are handled
 # correctly rather than silently coerced to NA with a parse warning.
-raw <- read_csv(DATA_PATH, show_col_types = FALSE, guess_max = 100000)
+# DATE-PARSING FIX (Aug 2026, applied here to match Scripts 16/17/18/26):
+# read_csv's type guesser converts "datetimeadmission" to POSIXct; ymd_hms()
+# then re-coerces it via as.character(), which for a midnight timestamp
+# yields a date-only string ("2025-08-08") that ymd_hms cannot parse -> NA ->
+# the record is silently dropped. Read the column as character and take the
+# date part directly instead.
+raw <- read_csv(DATA_PATH, show_col_types = FALSE, guess_max = 100000,
+                 col_types = cols(datetimeadmission = col_character()))
 
 # Report any residual parse problems so they are visible in the log
 parse_probs <- problems(raw)
@@ -100,9 +107,8 @@ cat(sprintf("  Rows loaded: %d\n", nrow(raw)))
 
 df <- raw %>%
   mutate(
-    adm_dt    = ymd_hms(datetimeadmission, quiet = TRUE),
-    adm_date  = as.Date(adm_dt),
-    adm_month = floor_date(adm_dt, "month"),
+    adm_date  = as.Date(substr(datetimeadmission, 1, 10)),
+    adm_month = floor_date(adm_date, "month"),
 
     inborn = case_when(
       inorout %in% c("Yes", "true", "True", "In")    ~ TRUE,

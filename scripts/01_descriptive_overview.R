@@ -9,7 +9,7 @@
 #   the absence of DCC/ESSC variables at SMCH).
 #
 # Data source:
-#   ZIM_db_master_joined_to_20260401.csv
+#   ZIM_db_master_joined_to_20260525.csv
 #   (see brief.md -> Data and infrastructure -> Primary data file)
 #
 # Filters applied in this script:
@@ -51,7 +51,7 @@ if (length(script_flag) > 0) {
 # Paths are relative to the script location (Golden-hour/02-CODE/).
 DATA_PATH <- normalizePath(
   file.path(SCRIPT_DIR, "..", "00-DATA",
-            "ZIM_db_master_joined_to_20260401.csv"),
+            "ZIM_db_master_joined_to_20260525.csv"),
   mustWork = FALSE
 )
 
