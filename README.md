@@ -33,10 +33,7 @@ Analysis Methods appendix.
 
 A line-by-line mapping of each manuscript table and figure to the script and
 output file that produced it is in
-**[FIGURE_TABLE_SOURCES.md](FIGURE_TABLE_SOURCES.md)** — including a list of
-scripts present in the original working folder but *not* included here,
-with the reason each was excluded (mainly: an earlier interrupted-time-series
-analysis that was dropped from the manuscript before submission).
+**[FIGURE_TABLE_SOURCES.md](FIGURE_TABLE_SOURCES.md)**.
 
 ---
 

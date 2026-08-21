@@ -8,7 +8,7 @@ Mapped against `The_Golden_Hour_20260821.docx`.
 Script numbers are **not renumbered/sequential** — they keep their original
 numbers from the analysis working folder (e.g. `01`, `03`, `08`, `16`–`27`) so
 they stay traceable to the request emails and provenance notes each was built
-from. See "Scripts not included" at the bottom for why the gaps exist.
+from.
 
 ## Tables
 
@@ -44,23 +44,3 @@ the combined 3-line figure directly.
 |---|---|---|
 | Descriptive baseline overview | `01_descriptive_overview.R` | Included for general documentation of the source data; not tied to a specific manuscript table |
 | Data-readiness / cohort-eligibility pre-check | `16_data_readiness_checks.R` | Confirms the variables the eligible-cohort spec depends on are present; also the source of the Results cohort-flow numbers (see Table above) |
-
-## Scripts not included in this repository, and why
-
-The manuscript (`The_Golden_Hour_20260821.docx`) reports a **descriptive**
-temperature trend and a **logistic-regression** mortality analysis — it does
-**not** contain an interrupted-time-series (ITS) result of any kind. The
-following scripts, present in the working analysis folder, are therefore not
-part of this repository because nothing in the manuscript cites them:
-
-| Script(s) | Reason excluded |
-|---|---|
-| `02` | Retired as the primary outcome analysis before this repository was built (indication-bias concern); no longer reported |
-| `04, 04b, 04c, 04d, 05, 06, 07` | Temperature ITS regression family (primary + seasonality sensitivity + power analysis) — superseded by the descriptive Figure 3 |
-| `12, 12b` | Mortality ITS regression family (+ Fourier seasonality sensitivity) — superseded by the Table 3a/3b logistic-regression OR analysis |
-| `09` | Resolved an uptake-denominator design question; the chosen denominator is implemented directly in `25`'s Table 1, so 09 itself reports nothing used in the manuscript |
-| `13` | An earlier per-baby mortality-OR model (different covariates/population) superseded by `17`/`18`'s Table 3a/5/6 |
-| `14` | Feasibility check for a delivery-room-to-NNU temperature analysis; concluded the data wasn't usable, so no analysis was produced |
-| `15` | Exploratory sepsis ITS, confounded by a concurrent unrelated QI programme; never intended as a primary result |
-| `26` | Re-run to check whether a DCC/temperature comparison had been reported; confirmed it had not made it into any manuscript draft |
-| all of `06-ALTERNATIVE_ANALYSES/` | ITS window/granularity sensitivity variants, doubly out of scope once ITS itself was dropped |
