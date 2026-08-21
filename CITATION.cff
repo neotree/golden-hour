@@ -16,7 +16,7 @@ authors:
   #   given-names: "Rachel"
   # - add remaining co-authors here
 license: MIT
-version: "1.0.0"
+version: "1.0.1"
 date-released: "2026-08-21"
 repository-code: "https://github.com/neotree/golden-hour"
 keywords:
