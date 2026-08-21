@@ -73,7 +73,7 @@ exist.
 
 ## Data availability
 
-**No data are stored in this repository.** The analyses use three routinely
+**No data are stored in this repository.** The analyses use two routinely
 collected, patient-level extracts that cannot be shared publicly for
 confidentiality and data-governance reasons — see
 **[input/README.md](input/README.md)** for the exact filenames expected.
