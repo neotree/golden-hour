@@ -1,34 +1,34 @@
 # =============================================================================
 # Golden Hour Analysis -- SMCH Zimbabwe
-# JULY 2026 REQUESTS -- Script 16: DATA READINESS CHECKS
+# Script 16: DATA READINESS CHECKS
 # =============================================================================
-# Purpose (plan section 5):
-#   Before running the new eligible-cohort outcome analysis, confirm that the
-#   variables the new specification depends on are actually present and usable
-#   in the master NeoTree file. Specifically:
-#     - gender / sex           (new adjustment covariate, Michelle's request)
-#     - resus / resustype      (needed for the eligibility exclusion BVM / CPR)
-#     - apgar1                 (needed for the eligibility exclusion apgar1 < 6)
-#     - delivinter             (four-group exposure: Neither/DCC/ESSC/Both)
-#     - birthweight, gender    (adjusted-model covariates)
-#     - neotreeoutcome         (outcome: death before discharge = NND)
+# Purpose:
+#   Before running the eligible-cohort outcome analysis, confirm that the
+#   variables the analysis specification depends on are actually present and
+#   usable in the master NeoTree file. This script does NOT model anything
+#   -- it prints and saves completeness and value distributions to confirm
+#   the eligibility definition is runnable.
 #
-#   This script does NOT model anything. It prints and saves completeness and
-#   value distributions so the team can confirm the eligibility definition is
-#   runnable (and pick the resus fallback if resustype is too incomplete).
-#
-# KEY DEFINITIONS BEING TESTED (from Rachel's 14 July 15:20 email):
+# Definitions & methodology:
+#   Data source : ZIM_db_master_joined_to_20260525.csv.
 #   Population  : all inborn neonates admitted to SMCH NNU, Nov 2024 - Oct 2025.
 #   Eligibility : EXCLUDE apgar1 < 6 OR resustype contains BVM or CPR.
 #   Exposure    : Neither / DCC only / ESSC(S2S) only / Both, from delivinter.
+#   Variables checked: gender/sex, resus/resustype, apgar1, delivinter,
+#   birthweight, neotreeoutcome.
+#   Confirmed variable codes (from the data dictionary):
+#     gender     : F, M, U (Unsure), AmbG (Ambiguous genitalia)
+#     resus      : Y / N   (were any resuscitation efforts made)
+#     resustype  : Stim, BVM, CPR, RESUSMED, Suc, O2   (multi-select)
+#     delivinter : DCC, S2S, BF, Norm (=NONE), U (=Unknown)   (multi-select)
 #
-# CONFIRMED VARIABLE CODES (from dictionary_zim_admissions.xlsx ValueMaps):
-#   gender     : F, M, U (Unsure), AmbG (Ambiguous genitalia)
-#   resus      : Y / N   (were any resuscitation efforts made)
-#   resustype  : Stim, BVM, CPR, RESUSMED, Suc, O2   (multi-select)
-#   delivinter : DCC, S2S, BF, Norm (=NONE), U (=Unknown)   (multi-select)
+# Outputs (to ./outputs/):
+#   16a_completeness.csv
+#   16b_readiness_summary.csv
+#   16c_bvmcpr_ascertainment_by_era.csv
+#   16_data_readiness_checks_log.txt
 #
-# DSH note: ASCII-only.
+# DSH note: script is ASCII-only.
 # =============================================================================
 
 library(tidyverse)
@@ -62,16 +62,14 @@ dir.create(OUTPUT_DIR, showWarnings = FALSE, recursive = TRUE)
 LOG_FILE <- file.path(OUTPUT_DIR, "16_data_readiness_checks_log.txt")
 log_con  <- file(LOG_FILE, open = "wt"); sink(log_con, split = TRUE, type = "output")
 
-# Analysis window -- QI paper period (Marcia: keep same period as QI).
-# Change these two dates if the team confirms a different window.
+# Analysis window -- the QI study period.
 INT_START <- as.Date("2024-11-01")
 INT_END   <- as.Date("2025-10-31")
 
-# ELIGIBILITY (team decision, 21 Jul 2026 -- Marcia + Rachel):
-#   Exclude 5-minute Apgar < 7 (apgar5); DROP the resus/resustype limb because the
-#   resus fields were incompletely filled. This supersedes the earlier
-#   "apgar1 < 6 OR resustype BVM/CPR" draft. Keep in step with Scripts 17/18.
-APGAR_FIELD    <- "apgar1"        # AUG 2026: 1-minute Apgar (Rachel 28 Jul, confirmed with Marcia)
+# ELIGIBILITY: exclude 1-minute Apgar < 7 (apgar1). The resus/resustype limb
+# is dropped, as the resus fields are incompletely filled. Keep in step
+# with Scripts 17/18.
+APGAR_FIELD    <- "apgar1"
 APGAR_CUTOFF   <- 7               # exclude if Apgar < this (apgar1 < 7 = 0-6)
 EXCLUSION_MODE <- "apgar_only"    # "apgar_only" | "apgar_resustype" | "apgar_both"
 
@@ -84,12 +82,12 @@ cat("=============================================================\n\n")
 # -----------------------------------------------------------------------------
 # 1. LOAD + DERIVE POPULATION
 # -----------------------------------------------------------------------------
-# DATE-PARSING FIX (Aug 2026): read_csv's type guesser converts
-# "datetimeadmission" to POSIXct; ymd_hms() then re-coerces it via as.character(),
-# which for a midnight timestamp yields a date-only string ("2025-08-08") that
-# ymd_hms cannot parse -> NA -> the record is silently dropped by the window
-# filter. Four SMCH inborn admissions were lost this way in the July run
-# (4,856 instead of 4,860). Read the column as character and take the date part.
+# DATE-PARSING NOTE: read_csv's type guesser converts "datetimeadmission" to
+# POSIXct; ymd_hms() then re-coerces it via as.character(), which for a
+# midnight timestamp yields a date-only string ("2025-08-08") that ymd_hms
+# cannot parse -> NA -> the record is silently dropped by the window filter
+# (this previously dropped 4 SMCH inborn admissions: 4,856 instead of 4,860).
+# Read the column as character and take the date part directly instead.
 raw <- read_csv(DATA_PATH, show_col_types = FALSE, guess_max = 100000,
                  col_types = cols(datetimeadmission = col_character()))
 cat(sprintf("Rows loaded: %d\n", nrow(raw)))
@@ -206,14 +204,13 @@ cat("  now Apgar-based -- see section 4.\n")
 write_csv(asc, file.path(OUTPUT_DIR, "16c_bvmcpr_ascertainment_by_era.csv"))
 
 # -----------------------------------------------------------------------------
-# 4. ELIGIBILITY EXCLUSION -- final rule: exclude Apgar (apgar5) < cutoff
+# 4. ELIGIBILITY EXCLUSION -- exclude Apgar (apgar1) < cutoff
 # -----------------------------------------------------------------------------
-# Team decision 21 Jul: exclude 5-minute Apgar < 7; resus/resustype limb dropped.
 # "Unassessable" = the chosen Apgar field is missing -> eligibility not confirmable.
 pop <- pop %>%
   mutate(
-    excl_apgar5 = !is.na(apgar5_num) & apgar5_num < 7,   # July rule, reference only
-    excl_apgar1 = !is.na(apgar1_num) & apgar1_num < 7,   # AUG 2026 selected rule
+    excl_apgar5 = !is.na(apgar5_num) & apgar5_num < 7,   # reference only, not used
+    excl_apgar1 = !is.na(apgar1_num) & apgar1_num < 7,   # selected rule
     excl_selected = !is.na(apgar_excl) & apgar_excl < APGAR_CUTOFF,
     excluded    = excl_selected,
     unassessable = is.na(apgar_excl),

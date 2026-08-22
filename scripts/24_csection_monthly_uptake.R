@@ -1,35 +1,36 @@
 # =============================================================================
 # Golden Hour Analysis -- SMCH Zimbabwe
-# AUGUST 2026 REQUESTS -- Script 24: DCC / ESSC UPTAKE BY MONTH, CAESAREAN ONLY
+# Script 24: DCC / ESSC UPTAKE BY MONTH, CAESAREAN ONLY
 # =============================================================================
-# Rachel, 28 July 2026 (point 2): "a table of by-month uptake number and % of
-#   eligible babies born by C-section (emergency and elective can be combined)
-#   for DCC and ESSC."
+# Purpose:
+#   Monthly uptake number and % of eligible babies born by Caesarean
+#   section (emergency and elective combined) for DCC and ESSC (Table 2a/2b).
 #
-# This is the Caesarean-restricted analogue of Tables 9c/9d (Script 09), so the
-# eligibility definition, status coding and percentage definitions are kept
-# IDENTICAL to Script 09 for comparability with the tables Rachel already has.
+# Definitions & methodology:
+#   Data source : zim_db_maternal_outcomes_20260501_cleaned.csv.
+#   Population  : maternal outcome script (delivery log), facility SMCH,
+#                 live births (neotreeoutcome LB or ENND), delivered by
+#                 Caesarean section (modedelivery 4 or 5 -- elective and
+#                 emergency combined).
+#   Eligibility : apgar1 > 6 OR resus == "N". NOTE: this differs from the
+#                 stricter resus == "N" only definition used for Table 1
+#                 (Script 23); both are reported in the log for comparison.
+#   Status      : dcc / s2s coded Y = received, N = not received,
+#                 U = unknown, "" / NA = not recorded.
+#   Percentages (per month, Caesarean eligible babies):
+#     pct_yes          = Y / n_eligible_cs           <- coverage figure
+#     pct_yes_of_known = Y / (Y + N)                 <- "of documented" figure
+#     pct_unknown      = (U + not recorded) / n_eligible_cs
+#   Windows: "12mo" (1 Nov 2024 - 31 Oct 2025, the key study period -- use
+#   this one) and "extended" (1 Nov 2024 - 31 Mar 2026).
 #
-# POPULATION : maternal outcome script (Prisca's delivery log), facility SMCH,
-#              live births (neotreeoutcome LB or ENND), delivered by Caesarean
-#              section (modedelivery 4 or 5 -- elective and emergency combined,
-#              as requested).
-# ELIGIBLE   : apgar1 > 6 OR resus == "N"   (Script 09 eligibility proxy).
-#              NOTE: this is the Script 08/09 definition, NOT the resus-only
-#              definition used for Table 1 (Script 23). Both are reported in the
-#              log so the difference is visible.
-# STATUS     : dcc / s2s coded Y = received, N = not received, U = unknown,
-#              "" / NA = not recorded.
-# PERCENTAGES (per month, Caesarean eligible babies):
-#   pct_yes          = Y / n_eligible_cs           <- the coverage figure
-#   pct_yes_of_known = Y / (Y + N)                 <- the "of documented" figure
-#   pct_unknown      = (U + not recorded) / n_eligible_cs
+# Outputs (to ./outputs/):
+#   24a_csection_monthly_uptake_12mo.csv
+#   24a_csection_monthly_uptake_extended.csv
+#   24b_csection_monthly_uptake_12mo_resusonly.csv
+#   24_csection_monthly_uptake_log.txt
 #
-# WINDOWS: both are produced --
-#   "12mo"     1 Nov 2024 - 31 Oct 2025  (the key study period; use this one)
-#   "extended" 1 Nov 2024 - 31 Mar 2026  (as in the earlier 9c/9d tables)
-#
-# DSH note: ASCII-only.  Data file: zim_db_maternal_outcomes_20260501_cleaned.csv
+# DSH note: script is ASCII-only.
 # =============================================================================
 
 library(tidyverse)
@@ -51,8 +52,8 @@ INT_START <- as.Date("2024-11-01")
 END_12MO  <- as.Date("2025-10-31")
 END_EXT   <- as.Date("2026-03-31")
 
-# Read every column as character (see Script 22/23 header: readr's type guesser
-# mangles dateadmission for the Nov 2025 - Mar 2026 records).
+# Read every column as character: readr's type guesser otherwise mangles
+# dateadmission for records outside its initial sample window.
 raw <- read_csv(MATERNAL, show_col_types = FALSE,
                 col_types = cols(.default = col_character()))
 
@@ -62,7 +63,6 @@ df <- raw %>%
     month_label = format(adm_date, "%Y-%m"),
     live_birth = neotreeoutcome %in% c("LB", "ENND"),
     apgar1_num = suppressWarnings(as.numeric(apgar1)),
-    # Script 09 eligibility proxy
     eligible = case_when(
       !is.na(apgar1_num) & apgar1_num > 6 ~ TRUE,
       resus == "N"                        ~ TRUE,

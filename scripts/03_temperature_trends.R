@@ -6,17 +6,19 @@
 #   Plot the monthly percentage of babies with normal admission temperature
 #   (36.5-37.5 C, WHO definition) from January 2022 to October 2025.
 #
-#   The plot:
-#     - Shades the historical period (Jan 2022 - Oct 2024) and the
-#       intervention period (Nov 2024 - Oct 2025) in distinct colours
-#     - Shows individual monthly data points, sized by number of observations
-#     - Overlays a loess smoothed trend line for each period
+# Definitions & methodology:
+#   Data source: ZIM_db_master_joined_to_20260525.csv.
+#   Shades the historical period (Jan 2022 - Oct 2024) and the intervention
+#   period (Nov 2024 - Oct 2025) in distinct colours; shows individual
+#   monthly data points sized by number of observations; overlays a loess
+#   smoothed trend line for each period.
 #
-#   Outputs saved to 03-OUTPUTS/:
-#     03a_monthly_normal_temp.csv  -- underlying monthly data
-#     03_temperature_trends.png    -- the plot
+# Outputs (to 03-OUTPUTS/):
+#   03a_monthly_normal_temp.csv  -- underlying monthly data
+#   03_temperature_trends.png    -- the plot
+#   03_temperature_trends_log.txt
 #
-# DSH note: script is ASCII-only (no non-ASCII characters anywhere).
+# DSH note: script is ASCII-only.
 # =============================================================================
 
 

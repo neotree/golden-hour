@@ -1,66 +1,40 @@
 # =============================================================================
 # Golden Hour Analysis -- SMCH Zimbabwe
-# AUGUST 2026 REQUESTS -- Script 27: DCC / ESSC UPTAKE BY MONTH, LOW BIRTH
-#                                     WEIGHT (<2500 g) ONLY  [Table 1a / 1b]
+# Script 27: DCC / ESSC UPTAKE BY MONTH, LOW BIRTH WEIGHT (<2500 g) ONLY
+#            [Table 1a / 1b]
 # =============================================================================
-# Rachel, 19 Aug 2026 (manuscript comment 14): "David could you add this table
-#   please in the same style as the Theatre babies in Table 2?" -- referring to
-#   Table 1a (DCC) and Table 1b (ESSC), the appendix tables headed "... among
-#   eligible low birth weight infants (<2500g), by month (1 Nov 2024-31 Oct
-#   2025)", which currently have only a caption and no data underneath.
+# Purpose:
+#   Monthly uptake of DCC (Table 1a) and ESSC (Table 1b) among eligible
+#   low-birthweight infants, in the same style as the Caesarean table
+#   (Script 24).
 #
-# This is the LBW-restricted analogue of Script 24 (the Caesarean-restricted
-# analogue that produced Table 2a/2b) -- same monthly layout, same six columns,
-# same TOTAL row -- just swapping the "born by Caesarean" filter for a
-# "birthweight < 2500 g" filter.
+# Definitions & methodology:
+#   Data source : zim_db_maternal_outcomes_20260501_cleaned.csv.
+#   Population  : maternal outcome script (delivery log), facility SMCH,
+#                 live births (neotreeoutcome LB or ENND), birthweight at
+#                 discharge (bwtdis) < 2500 g, range-filtered to 300-7000 g.
+#   Eligibility : two definitions are produced --
+#     (a) "table1_def" -- resus == "N" (DEFAULT, matches the Table 1 family)
+#     (b) "table2_def" -- apgar1 > 6 OR resus == "N" (matches Table 2)
+#     Both are written out so the intended definition can be confirmed
+#     before use -- they will not give identical Ns.
+#   Status      : dcc / s2s coded Y = received, N = not received,
+#                 U = unknown, "" / NA = not recorded.
+#   Percentages (per month, LBW eligible babies):
+#     pct_yes          = Y / n_eligible_lbw          <- coverage figure
+#     pct_yes_of_known = Y / (Y + N)                 <- "of documented" figure
+#     pct_unknown      = (U + not recorded) / n_eligible_lbw
+#   Window: 1 Nov 2024 - 31 Oct 2025 only (the key study period).
 #
-# POPULATION : maternal outcome script (Prisca's delivery log), facility SMCH,
-#              live births (neotreeoutcome LB or ENND), birthweight at
-#              discharge (bwtdis) < 2500 g.
-# ELIGIBILITY: two definitions are produced, exactly as Script 24 does for the
-#              Caesarean table, so you can pick whichever matches how the rest
-#              of the "Table 1" family in this manuscript is defined:
-#                (a) "table1_def"  -- resus == "N"  (Rachel's Table 1 / Script 23
-#                    definition -- DEFAULT, since Table 1a/1b sit under the
-#                    Table 1 heading in the manuscript)
-#                (b) "table2_def"  -- apgar1 > 6 OR resus == "N"  (the Script
-#                    08/09/24 proxy used for the Caesarean Table 2)
-#              Both are written out (27a = table1_def, 27b = table2_def) so you
-#              and Rachel can confirm which one is intended before pasting into
-#              the manuscript -- they will not give identical Ns. Table 1a/1b's
-#              text in the manuscript should be checked/quoted against whichever
-#              one is used, and the eligibility line in the Table 1a/1b footnote
-#              (mirroring the existing Table 2 footnote: "Eligible = 1-minute
-#              Apgar >6 or resuscitation not required") should be updated to
-#              match the definition actually used.
-# BIRTHWEIGHT: bwtdis, numeric, range-filtered to 300-7000 g (same implausible-
-#              value filter as Script 23), then LBW = bwtdis_num < 2500.
-# STATUS     : dcc / s2s coded Y = received, N = not received, U = unknown,
-#              "" / NA = not recorded -- identical coding to Script 24.
-# PERCENTAGES (per month, LBW eligible babies):
-#   pct_yes          = Y / n_eligible_lbw          <- the coverage figure
-#   pct_yes_of_known = Y / (Y + N)                 <- the "of documented" figure
-#   pct_unknown      = (U + not recorded) / n_eligible_lbw
-#
-# WINDOW: 1 Nov 2024 - 31 Oct 2025 only (the key study period), matching the
-#   Table 1a/1b captions already in the manuscript -- no "extended" window here.
-#
-# OUTPUTS (to ./outputs/maternal_august):
-#   27a_lbw_monthly_uptake_table1def.csv   <- default, resus == "N" eligibility
-#   27b_lbw_monthly_uptake_table2def.csv   <- cross-check, apgar1>6 OR resus=N
+# Outputs (to ./outputs/maternal_august/):
+#   27a_lbw_monthly_uptake_table1def.csv   -- default, resus == "N" eligibility
+#   27b_lbw_monthly_uptake_table2def.csv   -- cross-check, apgar1>6 OR resus=N
 #   27_lbw_monthly_uptake_log.txt
-#   Golden_Hour_Table1a_1b_LBW_monthly_uptake.docx
-#       -- Table 1a (DCC) and Table 1b (ESSC) as separate Word tables, built
-#          from the DEFAULT (table1_def) results, styled to match Table 2a/2b
-#          (bold header row, bold TOTAL row, plain grid borders) so they can be
-#          copied straight into the manuscript.
+#   Golden_Hour_Table1a_1b_LBW_monthly_uptake.docx -- Table 1a/1b as Word tables
 #
-# REQUIRES: tidyverse, lubridate (already used elsewhere in this project) plus
-#   officer and flextable for the docx output (not previously used in this
-#   project's scripts -- install with install.packages(c("officer","flextable"))
-#   if not already installed).
+# Requires: tidyverse, lubridate, officer, flextable (docx output).
 #
-# DSH note: ASCII-only.  Data file: zim_db_maternal_outcomes_20260501_cleaned.csv
+# DSH note: script is ASCII-only.
 # =============================================================================
 
 library(tidyverse)
@@ -84,8 +58,8 @@ INT_START <- as.Date("2024-11-01")
 INT_END   <- as.Date("2025-10-31")
 LBW_CUTOFF_G <- 2500
 
-# Read every column as character (see Script 22/23/24 header note: readr's type
-# guesser mangles dateadmission for the Nov 2025 - Mar 2026 records).
+# Read every column as character: readr's type guesser otherwise mangles
+# dateadmission for records outside its initial sample window.
 raw <- read_csv(MATERNAL, show_col_types = FALSE,
                 col_types = cols(.default = col_character()))
 
@@ -101,10 +75,9 @@ df <- raw %>%
                           NA_real_, bwtdis_num),
     lbw = !is.na(bwtdis_num) & bwtdis_num < LBW_CUTOFF_G,
 
-    # (a) Table 1 definition (Script 23 / Rachel's definition for the Table 1
-    #     family): did NOT require immediate resuscitation.
+    # (a) Table 1 definition (Script 23): did NOT require immediate resuscitation.
     eligible_table1_def = resus == "N",
-    # (b) Table 2 / Script 08-09-24 proxy definition, for cross-checking.
+    # (b) Table 2 proxy definition (Script 24), for cross-checking.
     eligible_table2_def = case_when(
       !is.na(apgar1_num) & apgar1_num > 6 ~ TRUE,
       resus == "N"                        ~ TRUE,
@@ -187,9 +160,9 @@ cat(sprintf("  Missing/out-of-range bwtdis in this window           : %d\n",
 # Column layout matches the existing Table 2a/2b exactly:
 #   Month | Eligible [low birth weight] infants, n | Received, n (% of eligible)
 #   | Not received, n | Unknown / not recorded, n (%) | % of documented (Y/N)
-# Built from the DEFAULT eligibility definition (table1_def). If you and Rachel
-# decide the table2_def cross-check should be used instead, swap tb_table1def
-# for tb_table2def in the two format_intervention() calls below.
+# Built from the DEFAULT eligibility definition (table1_def). To use the
+# table2_def cross-check instead, swap tb_table1def for tb_table2def in the
+# two format_intervention() calls below.
 
 fmt_pct  <- function(x) if_else(is.na(x), "-", sprintf("%.1f%%", x))
 fmt_cell <- function(n, pct) sprintf("%d (%s)", n, fmt_pct(pct))

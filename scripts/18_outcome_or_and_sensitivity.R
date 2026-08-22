@@ -1,52 +1,47 @@
 # =============================================================================
 # Golden Hour Analysis -- SMCH Zimbabwe
-# JULY 2026 REQUESTS -- Script 18: OUTCOME ODDS RATIOS (Table 4) + SENSITIVITY
+# Script 18: OUTCOME ODDS RATIOS (Table 4) + SENSITIVITY
 # =============================================================================
-# The single inferential analysis agreed for the outcomes paper (Rachel 14 July
-# 15:20, incorporating Michelle's request to add sex and Hannah's over-adjustment
-# concern). Per-baby logistic regression of death before discharge (NND) by the
-# four-group exposure, Neither as the reference category.
+# Purpose:
+#   Primary inferential analysis for the outcomes paper. Per-baby logistic
+#   regression of death before discharge (NND) by the four-group exposure,
+#   Neither as the reference category.
 #
-# MODELS (fitted on the SAME complete-case sample so all columns are comparable):
-#   Unadjusted        : nnd ~ exposure
-#   Adjusted (BW)     : nnd ~ exposure + birthweight
-#   Adjusted (BW+sex) : nnd ~ exposure + birthweight + sex     <- primary adjusted
-#   (gestation, admission temperature and Apgar are DELIBERATELY excluded --
-#    Apgar/resus are handled by the eligibility exclusion, resolving Hannah's
-#    collinearity concern. Both adjusted columns are reported per Rachel's email,
-#    which asked for BW-only and then BW+sex.)
+# Definitions & methodology:
+#   Data source: ZIM_db_master_joined_to_20260525.csv.
+#   Population   : SMCH inborn, non-readmission, Nov 2024 - Oct 2025,
+#                  ELIGIBLE, with delivinter known and direct_match (a
+#                  discharge outcome is required for NND).
+#   Eligibility  : exclude 1-minute Apgar < 7 (apgar1). The resus/resustype
+#                  limb is dropped (resus incompletely recorded).
+#   Exposure     : delivinter, four mutually exclusive groups -- Neither
+#                  (reference) / DCC only / ESSC(S2S) only / Both DCC and
+#                  ESSC. ESSC-only is reported as counts only (Tables 2/3)
+#                  and omitted from the OR models (group too small;
+#                  single-figure deaths).
+#   Models (fitted on the same complete-case sample so all columns are
+#   comparable):
+#     Unadjusted        : nnd ~ exposure
+#     Adjusted (BW)     : nnd ~ exposure + birthweight
+#     Adjusted (BW+sex) : nnd ~ exposure + birthweight + sex  <- primary
+#   (Gestation, admission temperature and Apgar are deliberately excluded --
+#    Apgar/resus are already handled by the eligibility exclusion, avoiding
+#    collinearity.)
+#   Strata: (1) all eligible infants, (2) LBW < 2500 g, (3) sensitivity:
+#   1500-2499 g (babies most likely to benefit).
+#   Data-quality handling: birthweight_g preference + range filter; sex
+#   normalisation; robust delivinter/resustype matching (see Script 17).
+#   Interpretive caveat: observational; residual confounding by indication
+#   persists even after the eligibility exclusion and adjustment. Reported
+#   as supportive/secondary observational evidence, not causal.
 #
-# EXPOSURE (delivinter, four mutually exclusive groups):
-#   Neither (reference) / DCC only / ESSC(S2S) only / Both DCC and ESSC
-#   ESSC-only is reported as COUNTS ONLY (Tables 2/3) and OMITTED from the OR
-#   models -- team decision 21 Jul (group too small; single-figure deaths).
-#
-# STRATA / POPULATIONS (Table 4 + sensitivity):
-#   1. All eligible infants
-#   2. LBW < 2500 g
-#   3. SENSITIVITY: 1500-2499 g (babies most likely to benefit; Rachel's request)
-#
-# POPULATION: SMCH inborn, non-readmission, Nov 2024-Oct 2025, ELIGIBLE, with
-#   delivinter known and direct_match (a discharge outcome is required for NND).
-# ELIGIBILITY (team decision 21 Jul -- Marcia + Rachel): exclude 5-minute Apgar < 7
-#   (apgar5). The resus/resustype limb is DROPPED (resus incompletely filled).
-#   This supersedes the earlier "apgar1 < 6 OR resustype BVM/CPR" draft.
-#
-# INTERPRETIVE CAVEAT (carry into the manuscript): observational; residual
-#   confounding by indication persists even after the eligibility exclusion and
-#   adjustment. Report as supportive/secondary observational evidence, not causal.
-#
-# DATA-QUALITY HANDLING: see header of Script 17 / the variable-issues catalogue
-#   (birthweight_g preference + range filter; sex normalisation; robust
-#   delivinter/resustype matching).
-#
-# OUTPUTS (to ./outputs):
+# Outputs (to ./outputs/):
 #   18a_or_full_models.csv   -- every coefficient, tagged model + stratum
 #   18b_or_table4.csv        -- Table 4 layout: OR (95% CI) per group x model x stratum
 #   18c_or_counts.csv        -- group sizes / death counts / crude rates per stratum
 #   18_outcome_or_log.txt
 #
-# DSH note: ASCII-only.
+# DSH note: script is ASCII-only.
 # =============================================================================
 
 library(tidyverse)
@@ -77,16 +72,14 @@ log_con  <- file(LOG_FILE, open = "wt"); sink(log_con, split = TRUE, type = "out
 INT_START <- as.Date("2024-11-01")
 INT_END   <- as.Date("2025-10-31")
 
-# ELIGIBILITY (team decision, 21 Jul 2026 -- Marcia + Rachel):
-#   Exclude babies with a LOW APGAR; DROP the resus/resustype limb, because the
-#   resus fields were incompletely filled (assume undocumented = not needed).
-#   Marcia specified the 5-MINUTE Apgar with a < 7 cut-off (this REPLACES the
-#   1-minute Apgar < 6 in the first draft).
-APGAR_FIELD    <- "apgar1"   # AUG 2026: 1-minute Apgar (Rachel 28 Jul)
+# ELIGIBILITY: exclude 1-minute Apgar < 7. Drop the resus/resustype limb,
+# because the resus fields are incompletely filled (assume undocumented =
+# not needed).
+APGAR_FIELD    <- "apgar1"
 APGAR_CUTOFF   <- 7          # exclude if Apgar < this value (apgar1 < 7 = 0-6)
 EXCLUSION_MODE <- "apgar_only"   # "apgar_only" | "apgar_resustype" | "apgar_both"
-# ESSC-only group: team agreed it is too small to model -- report it as counts in
-# Tables 2/3 (Script 17) and OMIT its odds ratio here. FALSE = omit from models.
+# ESSC-only group is too small to model -- reported as counts in Tables 2/3
+# (Script 17) and OMITTED from the odds-ratio models here.
 ANALYSE_ESSC_ONLY <- FALSE
 # Minimum events/observations before a model is fitted (stability guard).
 MIN_EVENTS <- 5
@@ -100,12 +93,11 @@ cat("=============================================================\n\n")
 # -----------------------------------------------------------------------------
 # 1. LOAD + DERIVE  (shared derivation, mirrors Scripts 16/17)
 # -----------------------------------------------------------------------------
-# DATE-PARSING FIX (Aug 2026): read_csv's type guesser converts
-# "datetimeadmission" to POSIXct; ymd_hms() then re-coerces it via as.character(),
-# which for a midnight timestamp yields a date-only string ("2025-08-08") that
-# ymd_hms cannot parse -> NA -> the record is silently dropped by the window
-# filter. Four SMCH inborn admissions were lost this way in the July run
-# (4,856 instead of 4,860). Read the column as character and take the date part.
+# DATE-PARSING NOTE: read_csv's type guesser converts "datetimeadmission" to
+# POSIXct; ymd_hms() then re-coerces it via as.character(), which for a
+# midnight timestamp yields a date-only string ("2025-08-08") that ymd_hms
+# cannot parse -> NA -> the record is silently dropped by the window filter.
+# Read the column as character and take the date part directly instead.
 raw <- read_csv(DATA_PATH, show_col_types = FALSE, guess_max = 100000,
                  col_types = cols(datetimeadmission = col_character()))
 bw_src <- if ("birthweight_g" %in% names(raw)) raw$birthweight_g else raw$birthweight
@@ -194,8 +186,8 @@ run_stratum <- function(data, stratum_label) {
     mutate(stratum = stratum_label)
   print(as.data.frame(grp_counts), row.names = FALSE)
 
-  # Team decision (21 Jul): ESSC-only is too small to model. Keep it in the counts
-  # above (and in Tables 2/3), but drop it from the OR models. Removing a single
+  # ESSC-only is too small to model. Keep it in the counts above (and in
+  # Tables 2/3), but drop it from the OR models. Removing a single
   # non-reference category does not change the other groups' ORs vs Neither.
   if (!ANALYSE_ESSC_ONLY) {
     md <- md %>% filter(exposure != "ESSC only")

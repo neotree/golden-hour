@@ -1,36 +1,31 @@
 # =============================================================================
 # Golden Hour Analysis -- SMCH Zimbabwe
-# AUGUST 2026 REQUESTS -- Script 25: DCC / ESSC DOCUMENTATION, ALL LIVE BIRTHS
+# Script 25: DCC / ESSC DOCUMENTATION, ALL LIVE BIRTHS
 # =============================================================================
-# Rachel, 28 July 2026 (point 3): table 8b gives, per month, live births,
-#   eligible babies, and Y / N / Unknown for DCC and ESSC -- but the Y/N/U
-#   counts add up only to the ELIGIBLE babies. She would also like the Y / N /
-#   Unknown documentation for ALL babies: "Every baby should have a status
-#   recorded even if they were not eligible. Then the midwives should have put
-#   N - if that makes sense."
+# Purpose:
+#   Per month, live births, eligible babies, and Y/N/Unknown status for DCC
+#   and ESSC, reported for BOTH all live births and eligible live births
+#   only, so the two are directly comparable and the ineligible remainder
+#   is visible.
 #
-# So this script reproduces the 8b layout with the status breakdown given TWICE
-# per month: once for ALL live births and once for ELIGIBLE live births (the
-# original 8b columns), so the two are directly comparable and the ineligible
-# remainder is visible.
+# Definitions & methodology:
+#   Data source : zim_db_maternal_outcomes_20260501_cleaned.csv.
+#   Population  : maternal outcome script (delivery log), facility SMCH,
+#                 live births (neotreeoutcome LB or ENND).
+#   Eligibility : apgar1 > 6 OR resus == "N".
+#   Status      : Y = received, N = not received, U = unknown,
+#                 "" / NA = not recorded (reported separately from U --
+#                 "no status recorded" and "recorded as unknown" are
+#                 different documentation outcomes).
+#   Windows: "12mo" (1 Nov 2024 - 31 Oct 2025, the key study period -- use
+#   this one) and "extended" (1 Nov 2024 - 31 Mar 2026).
 #
-# POPULATION : maternal outcome script (Prisca's delivery log), facility SMCH,
-#              live births (neotreeoutcome LB or ENND).
-# ELIGIBLE   : apgar1 > 6 OR resus == "N"  -- the Script 08/09 proxy, kept
-#              identical to the original table 8b.
-# STATUS     : Y = received, N = not received, U = unknown,
-#              "" / NA = not recorded (reported separately from U, because
-#              "midwife wrote nothing" and "midwife wrote unknown" are different
-#              documentation failures).
+# Outputs (to ./outputs/):
+#   25a_documentation_all_vs_eligible_<window>.csv  -- wide, all vs eligible
+#   25b_documentation_ineligible_<window>.csv       -- the remainder only
+#   25_documentation_all_babies_log.txt
 #
-# WINDOWS: both are produced --
-#   "12mo"     1 Nov 2024 - 31 Oct 2025  (the key study period; use this one)
-#   "extended" 1 Nov 2024 - 31 Mar 2026  (as in the earlier 8b table)
-#
-# OUTPUTS: 25a_documentation_all_vs_eligible_<window>.csv  (wide, 8b-style)
-#          25b_documentation_ineligible_<window>.csv       (the remainder only)
-#
-# DSH note: ASCII-only.  Data file: zim_db_maternal_outcomes_20260501_cleaned.csv
+# DSH note: script is ASCII-only.
 # =============================================================================
 
 library(tidyverse)

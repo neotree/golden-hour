@@ -3,28 +3,28 @@
 # Script 01: Descriptive Overview of the Dataset
 # =============================================================================
 # Purpose:
-#   Produce a comprehensive descriptive summary of the master dataset as it
-#   applies to the golden hour analysis. Covers date ranges, completeness of
-#   all key variables, distributions, and flags important data gaps (notably
-#   the absence of DCC/ESSC variables at SMCH).
+#   Comprehensive descriptive summary of the master dataset: date ranges,
+#   completeness of all key variables, distributions, and important data
+#   gaps (notably the absence of DCC/ESSC variables at SMCH).
 #
-# Data source:
-#   ZIM_db_master_joined_to_20260525.csv
-#   (see brief.md -> Data and infrastructure -> Primary data file)
-#
-# Filters applied in this script:
-#   - Facility: SMCH only
-#   - Inborn only (harmonised across script versions)
-#   - Readmissions excluded
-#
-# Population labels used throughout:
+# Definitions & methodology:
+#   Data source: ZIM_db_master_joined_to_20260525.csv.
+#   Facility: SMCH only. Inborn only. Readmissions excluded.
 #   all_smch     : all SMCH records (no date filter, no inborn filter)
 #   smch_inborn  : SMCH inborn non-readmission records (full history)
 #   int_pop      : intervention period (Nov 2024 - Oct 2025), inborn
 #   hist_pop     : historical period (Jan 2022 - Oct 2024), inborn
 #   q10_pop      : int_pop + hist_pop combined (for Q10 temperature trends)
 #
-# DSH note: script is ASCII-only (no non-ASCII characters anywhere).
+# Outputs (to 03-OUTPUTS/):
+#   01a_variable_completeness_smch_inborn.csv
+#   01b_monthly_trends_q10.csv
+#   01c_key_counts_summary.csv
+#   01d_monthly_dcc_s2s_uptake.csv
+#   01e_bwgroup_dcc_s2s_uptake.csv
+#   01_descriptive_overview_log.txt
+#
+# DSH note: script is ASCII-only.
 # =============================================================================
 
 

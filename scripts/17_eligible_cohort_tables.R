@@ -1,31 +1,39 @@
 # =============================================================================
 # Golden Hour Analysis -- SMCH Zimbabwe
-# JULY 2026 REQUESTS -- Script 17: ELIGIBLE-COHORT CHARACTERISTICS + OUTCOMES
+# Script 17: ELIGIBLE-COHORT CHARACTERISTICS + OUTCOMES
 # =============================================================================
-# Produces the descriptive tables Felicity and Hannah asked for, on the
-# ELIGIBLE inborn NNU cohort, broken down by the four-group exposure:
-#   Neither / DCC only / ESSC(S2S) only / Both DCC and ESSC.
+# Purpose:
+#   Descriptive tables on the ELIGIBLE inborn NNU cohort, broken down by the
+#   four-group exposure (Neither / DCC only / ESSC(S2S) only / Both):
+#     Table 2 -- baseline characteristics by group (mode of delivery,
+#                birthweight bands, gestational-age bands)
+#     Table 3 -- outcome by group: death before discharge (NND), n (%)
 #
-#   Table 2  -- baseline characteristics by group
-#               (mode of delivery, birthweight bands, gestational-age bands)
-#   Table 3  -- outcome by group: death before discharge (NND), n (%)
+# Definitions & methodology:
+#   Data source  : ZIM_db_master_joined_to_20260525.csv.
+#   Population   : inborn NNU admissions, Nov 2024 - Oct 2025.
+#   Eligibility  : EXCLUDES 1-minute Apgar < 7 (resus limb dropped,
+#                  incompletely recorded).
+#   Exposure     : four groups (ESSC-only reported as counts here, no OR --
+#                  see Script 18).
+#   Outcome      : death before discharge = neotreeoutcome == "NND",
+#                  computed on direct_match records only (a discharge
+#                  outcome is required). The full outcome distribution is
+#                  printed so the denominator is visible.
+#   Data-quality handling:
+#     - birthweight : prefer derived birthweight_g; rescue kg; 300-7000 g filter
+#     - modedelivery: collapsed to Vaginal/Caesarean, handling both numeric
+#                     (1-7) and legacy text codes
+#     - gender      : normalise legacy Male/Female variants to M/F
+#     - delivinter  : multi-select substring match, robust to legacy coding
 #
-# SPEC: population = inborn NNU admissions, Nov 2024-Oct 2025; eligibility EXCLUDE
-#   5-minute Apgar < 7 (team decision 21 Jul; resus limb dropped); exposure four
-#   groups (ESSC-only reported as counts here, no OR -- see Script 18).
+# Outputs (to ./outputs/):
+#   17a_table2_characteristics.csv
+#   17b_table2_missingness.csv
+#   17c_table3_outcomes.csv
+#   17_eligible_cohort_tables_log.txt
 #
-# DATA-QUALITY HANDLING (see Neotree_variable_issues_catalogue.md):
-#   - birthweight : prefer derived birthweight_g; rescue kg; 300-7000 g filter (B1,E)
-#   - modedelivery: collapsed to Vaginal/Caesarean, handling BOTH numeric (1-7)
-#                   and any legacy text codes defensively (A2,C1)
-#   - gender      : normalise legacy Male/Female variants to M/F (A1)
-#   - delivinter  : multi-select substring match, robust to legacy coding
-#
-# OUTCOME NOTE: death before discharge = neotreeoutcome == "NND", computed on
-#   direct_match records only (a discharge outcome is required). The full
-#   outcome distribution is printed so the team can see the denominator.
-#
-# DSH note: ASCII-only.
+# DSH note: script is ASCII-only.
 # =============================================================================
 
 library(tidyverse)
@@ -55,9 +63,9 @@ log_con  <- file(LOG_FILE, open = "wt"); sink(log_con, split = TRUE, type = "out
 INT_START <- as.Date("2024-11-01")
 INT_END   <- as.Date("2025-10-31")
 
-# ELIGIBILITY -- keep in step with Script 18. Team decision (21 Jul, Marcia+Rachel):
-# exclude 5-minute Apgar < 7; drop the resus limb. See Script 18 header.
-APGAR_FIELD    <- "apgar1"   # AUG 2026: 1-minute Apgar (Rachel 28 Jul)
+# ELIGIBILITY -- keep in step with Script 18: exclude 1-minute Apgar < 7;
+# drop the resus limb (incompletely recorded). See Script 18 header.
+APGAR_FIELD    <- "apgar1"
 APGAR_CUTOFF   <- 7
 EXCLUSION_MODE <- "apgar_only"   # "apgar_only" | "apgar_resustype" | "apgar_both"
 
@@ -69,12 +77,11 @@ cat("=============================================================\n\n")
 # -----------------------------------------------------------------------------
 # 1. LOAD + DERIVE (shared derivation, mirrors Scripts 16/18)
 # -----------------------------------------------------------------------------
-# DATE-PARSING FIX (Aug 2026): read_csv's type guesser converts
-# "datetimeadmission" to POSIXct; ymd_hms() then re-coerces it via as.character(),
-# which for a midnight timestamp yields a date-only string ("2025-08-08") that
-# ymd_hms cannot parse -> NA -> the record is silently dropped by the window
-# filter. Four SMCH inborn admissions were lost this way in the July run
-# (4,856 instead of 4,860). Read the column as character and take the date part.
+# DATE-PARSING NOTE: read_csv's type guesser converts "datetimeadmission" to
+# POSIXct; ymd_hms() then re-coerces it via as.character(), which for a
+# midnight timestamp yields a date-only string ("2025-08-08") that ymd_hms
+# cannot parse -> NA -> the record is silently dropped by the window filter.
+# Read the column as character and take the date part directly instead.
 raw <- read_csv(DATA_PATH, show_col_types = FALSE, guess_max = 100000,
                  col_types = cols(datetimeadmission = col_character()))
 bw_src <- if ("birthweight_g" %in% names(raw)) raw$birthweight_g else raw$birthweight

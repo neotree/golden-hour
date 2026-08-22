@@ -4,52 +4,37 @@
 # =============================================================================
 # Purpose:
 #   Compare DCC and skin-to-skin (S2S/ESSC) uptake across two parallel data
-#   streams over the extended analysis period (November 2024 - March 2026).
-#   The original intervention window was November 2024 - October 2025 (12 months).
-#   At the 2026-05-19 project meeting it was decided to extend the analysis to
-#   March 2026 to use all available data from both the NeoTree master file
-#   (ZIM_db_master_joined_to_20260525.csv) and the maternal outcomes extract
-#   (zim_db_maternal_outcomes_20260501_cleaned.csv).
+#   streams over the analysis period (November 2024 - March 2026):
+#     Part A -- NeoTree data (inborn neonatal admissions)
+#     Part B -- Maternal outcome script (primary source)
+#     Part C -- LBW subgroup (bwtdis < 2500 g), from the maternal outcome
+#               script, eligible babies only
 #
-#   Part A -- NeoTree data (inborn neonatal admissions):
-#     Monthly DCC and S2S uptake from the 'delivinter' multi-select variable.
-#     Denominator: known delivinter (recorded and not coded Unknown).
+# Definitions & methodology:
+#   Data sources: ZIM_db_master_joined_to_20260525.csv (NeoTree master) and
+#   zim_db_maternal_outcomes_20260501_cleaned.csv (maternal outcomes).
 #
-#   Part B -- Maternal outcome script (primary source):
-#     Monthly DCC and S2S uptake from Prisca's delivery-log data.
-#     dcc / s2s variables: Y = received, N = not received,
-#                          U = unknown, "" = not recorded.
-#     Denominator for uptake rate: known (Y + N only).
-#     Secondary metric: unknown rate (U / all recorded) per month as a
-#     measure of documentation quality.
+#   Part A: monthly DCC and S2S uptake from the 'delivinter' multi-select
+#   variable. Denominator: known delivinter (recorded and not coded Unknown).
 #
-#   Part C -- LBW subgroup (bwtdis < 2500 g):
-#     Monthly DCC and S2S uptake among low-birthweight babies from the
-#     maternal outcome script. Applied to eligible babies only.
+#   Part B: monthly DCC and S2S uptake from the maternal delivery-log data.
+#   dcc / s2s variables: Y = received, N = not received, U = unknown,
+#   "" = not recorded. Denominator for uptake rate: known (Y + N only).
+#   Secondary metric: unknown rate (U / all recorded) per month.
 #
-# ELIGIBILITY PROXY (applied throughout):
-#   Not requiring immediate resuscitation.
-#   Proxy: apgar1 > 6 OR resus == "N"  (consistent with Scripts 01-02).
-#   Babies where eligibility cannot be determined (apgar1 missing AND resus
-#   not recorded or "U") are flagged separately but retained in totals.
+#   Eligibility proxy (applied throughout): not requiring immediate
+#   resuscitation. Proxy: apgar1 > 6 OR resus == "N". Babies where
+#   eligibility cannot be determined (apgar1 missing AND resus not recorded
+#   or "U") are flagged separately but retained in totals.
 #
-# DATA SOURCES:
-#   (A) ZIM_db_master_joined_to_20260525.csv  (NeoTree master)
-#   (B) zim_db_maternal_outcomes_20260501_cleaned.csv  (maternal outcomes)
+#   Note on "inborn" in the maternal outcome script: it is completed
+#   directly from the SMCH delivery log, so all entries represent babies
+#   born at SMCH. No inborn/outborn filter variable is present. The
+#   'externalsource' variable (ER = ~3% of rows) records that the MOTHER
+#   was referred from an external facility -- the baby is still born at
+#   SMCH and is included in all analyses.
 #
-# NOTE ON "INBORN" IN THE MATERNAL OUTCOME SCRIPT:
-#   The maternal outcome script is completed by Prisca directly from the
-#   SMCH delivery log. All entries therefore represent babies born at SMCH
-#   (i.e. inborn). No inborn/outborn filter variable is present; a note is
-#   included where relevant. The 'externalsource' variable (ER = ~3% of
-#   rows) records that the MOTHER was referred from an external facility --
-#   the baby is still born at SMCH and is included in all analyses.
-#
-# DSH CONSTRAINT: script is ASCII-only.
-#   No Unicode, curly quotes, special characters, or non-ASCII symbols.
-#
-# OUTPUTS (all to 03-OUTPUTS/):
-#   08_maternal_script_uptake_log.txt
+# Outputs (to 03-OUTPUTS/):
 #   08a_neotree_monthly_uptake.csv
 #   08b_maternal_monthly_uptake.csv
 #   08c_lbw_monthly_uptake.csv
@@ -57,6 +42,9 @@
 #   08e_maternal_monthly_uptake.png
 #   08f_maternal_unknown_rate.png
 #   08g_lbw_monthly_uptake.png
+#   08_maternal_script_uptake_log.txt
+#
+# DSH note: script is ASCII-only.
 # =============================================================================
 
 
@@ -105,7 +93,7 @@ sink(log_con, split = TRUE, type = "output")
 
 # -- Study period constants ---------------------------------------------------
 INT_START <- as.Date("2024-11-01")
-INT_END   <- as.Date("2026-03-31")   # extended from Oct 2025 to Mar 2026 (2026-05-19 decision)
+INT_END   <- as.Date("2026-03-31")
 
 # -- Plot theme ---------------------------------------------------------------
 # Consistent minimal theme used across all script 08 figures.
@@ -442,7 +430,7 @@ mo_int <- mo %>%
   )
 
 # Note: all records in the maternal outcomes dataset are from the SMCH
-# delivery log (Prisca's data), so all are inborn by definition.
+# delivery log, so all are inborn by definition.
 # No separate inborn/outborn filter is applied.
 
 cat(sprintf("\nMaternal outcomes -- SMCH, Nov 2024 - Mar 2026 (extended):\n"))

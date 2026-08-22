@@ -1,18 +1,23 @@
 # =============================================================================
 # Golden Hour Analysis -- SMCH Zimbabwe
-# JULY 2026 REQUESTS -- Script 20: FOREST PLOT of the Table 4/5 odds ratios
+# Script 20: FOREST PLOT of the Table 4/5 odds ratios
 # =============================================================================
-# Publication-quality forest plot of the per-baby mortality odds ratios, read
-# straight from Script 18's output (18a_or_full_models.csv). Shows all three
-# strata (all eligible / LBW <2500 g / sensitivity 1500-2499 g), both exposure
-# comparisons (DCC only, Both), and the three models (unadjusted, adjusted for
-# birth weight, adjusted for birth weight + sex). Reference: neither DCC nor ESSC.
-# ESSC-only is omitted (reported as counts only; see Table 3).
+# Purpose:
+#   Publication-quality forest plot of the per-baby mortality odds ratios,
+#   read straight from Script 18's output.
 #
-# INPUT : outputs/<DATA_TAG>/18a_or_full_models.csv  (run Script 18 first)
-# OUTPUT: outputs/<DATA_TAG>/20_forest_table4.png
+# Definitions & methodology:
+#   Shows all three strata (all eligible / LBW <2500 g / sensitivity
+#   1500-2499 g), both exposure comparisons (DCC only, Both), and the three
+#   models (unadjusted, adjusted for birth weight, adjusted for birth
+#   weight + sex). Reference: neither DCC nor ESSC. ESSC-only is omitted
+#   (reported as counts only; see Table 3).
 #
-# DSH note: ASCII-only.
+# Outputs (to ./outputs/):
+#   Input : outputs/<DATA_TAG>/18a_or_full_models.csv (run Script 18 first)
+#   Output: outputs/<DATA_TAG>/20_forest_table4.png
+#
+# DSH note: script is ASCII-only.
 # =============================================================================
 
 library(tidyverse)

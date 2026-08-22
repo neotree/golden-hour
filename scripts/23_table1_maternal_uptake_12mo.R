@@ -1,26 +1,28 @@
 # =============================================================================
 # Golden Hour Analysis -- SMCH Zimbabwe
-# AUGUST 2026 REQUESTS -- Script 23: TABLE 1 restricted to the 12-month period
+# Script 23: TABLE 1 restricted to the 12-month period
 # =============================================================================
-# Rachel, 31 July 2026 (point 4): Table 1 must cover the KEY STUDY PERIOD ONLY,
-#   1 November 2024 - 31 October 2025, to match the rest of the paper. This
-#   supersedes Script 22 (which ran 1 Nov 2024 - 31 Mar 2026).
+# Purpose:
+#   Table 1: uptake of DCC and ESSC among eligible live births, restricted
+#   to the key study period only (1 November 2024 - 31 October 2025), to
+#   match the rest of the paper.
 #
-# CHANGE FROM SCRIPT 22:
-#   - INT_END moved from 2026-03-31 to 2025-10-31.
-#   - The "Maternal script >12 months" Yes/No block is DROPPED: with the window
-#     restricted, every birth falls in "No", so the row carries no information.
-#     (Agreed with David, 6 Aug 2026.)
+# Definitions & methodology:
+#   Data source : zim_db_maternal_outcomes_20260501_cleaned.csv.
+#   Population  : SMCH live births (neotreeoutcome LB or ENND) in the
+#                 maternal outcome script.
+#   Eligibility : "Did this baby require immediate resuscitation = No",
+#                 i.e. resus == "N" in the maternal script.
+#   Columns     : Eligible infants n; Received DCC n (%); Received ESSC
+#                 n (%); Received both n (%). Percentages are of the row's
+#                 eligible n (coverage, i.e. Unknown/not-recorded records
+#                 count in the denominator).
 #
-# ELIGIBILITY (Rachel's definition for this table): "Did this baby require
-#   immediate resuscitation = No", i.e. resus == "N" in the maternal script.
-# POPULATION: SMCH live births (neotreeoutcome LB or ENND) in the maternal
-#   outcome script (Prisca's delivery log).
-# COLUMNS: Eligible infants n; Received DCC n (%); Received ESSC n (%);
-#   Received both n (%). Percentages are of the row's eligible n (coverage,
-#   i.e. Unknown/not-recorded records count in the denominator).
+# Outputs (to ./outputs/):
+#   23a_table1_maternal_uptake_12mo.csv
+#   23_table1_maternal_uptake_12mo_log.txt
 #
-# DSH note: ASCII-only.  Data file: zim_db_maternal_outcomes_20260501_cleaned.csv
+# DSH note: script is ASCII-only.
 # =============================================================================
 
 library(tidyverse)
@@ -39,14 +41,14 @@ LOG_FILE <- file.path(OUTPUT_DIR, "23_table1_maternal_uptake_12mo_log.txt")
 log_con <- file(LOG_FILE, open = "wt"); sink(log_con, split = TRUE, type = "output")
 
 INT_START <- as.Date("2024-11-01")
-INT_END   <- as.Date("2025-10-31")   # <-- 31 Jul 2026 change (was 2026-03-31)
+INT_END   <- as.Date("2025-10-31")
 
-# NOTE (carried over from Script 22): read EVERY column as character. readr's
-# type guesser infers "dateadmission" as datetime from the first block of rows,
-# then silently mangles the Nov 2025 - Mar 2026 records (all timestamped
-# 22:00:00). Reading as character and parsing the date ourselves reproduces
-# base R / pandas exactly. Keep this even though the window now stops in Oct
-# 2025 -- the mangling happens at read time, before the filter.
+# NOTE: read EVERY column as character. readr's type guesser infers
+# "dateadmission" as datetime from the first block of rows, then silently
+# mangles later records outside that window. Reading as character and
+# parsing the date ourselves reproduces base R / pandas exactly. This
+# matters even though the window here stops in Oct 2025, because the
+# mangling happens at read time, before the filter is applied.
 raw <- read_csv(MATERNAL, show_col_types = FALSE,
                 col_types = cols(.default = col_character()))
 
