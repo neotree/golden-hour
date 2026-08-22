@@ -22,10 +22,16 @@
 #   "" = not recorded. Denominator for uptake rate: known (Y + N only).
 #   Secondary metric: unknown rate (U / all recorded) per month.
 #
-#   Eligibility proxy (applied throughout): not requiring immediate
-#   resuscitation. Proxy: apgar1 > 6 OR resus == "N". Babies where
-#   eligibility cannot be determined (apgar1 missing AND resus not recorded
-#   or "U") are flagged separately but retained in totals.
+#   Eligibility (not requiring immediate resuscitation) differs by part,
+#   since Part A and Part B/C read different source data:
+#     Part A (NeoTree data): apgar1 > 6 OR resus %in% c("NONE","Norm").
+#       Babies where eligibility cannot be determined are flagged separately
+#       but retained in totals.
+#     Part B/C (maternal outcome script): resus == "N" ("Did baby require
+#       immediate resuscitation? = No") -- the confirmed primary/reported
+#       definition, in step with Scripts 23/24/25. A broader apgar1>6 OR
+#       resus=="N" proxy is also computed and written to a separate,
+#       clearly-labelled cross-check output only.
 #
 #   Note on "inborn" in the maternal outcome script: it is completed
 #   directly from the SMCH delivery log, so all entries represent babies
@@ -36,12 +42,13 @@
 #
 # Outputs (to 03-OUTPUTS/):
 #   08a_neotree_monthly_uptake.csv
-#   08b_maternal_monthly_uptake.csv
+#   08b_maternal_monthly_uptake.csv       (primary, resus=="N")
 #   08c_lbw_monthly_uptake.csv
 #   08d_neotree_monthly_uptake.png
 #   08e_maternal_monthly_uptake.png
 #   08f_maternal_unknown_rate.png
 #   08g_lbw_monthly_uptake.png
+#   08h_maternal_monthly_uptake_broadproxy_crosscheck.csv (cross-check only)
 #   08_maternal_script_uptake_log.txt
 #
 # DSH note: script is ASCII-only.
@@ -380,8 +387,11 @@ mo <- mo_raw %>%
     # since DCC/S2S are not applicable to these outcomes.
     live_birth = neotreeoutcome %in% c("LB", "ENND"),
 
-    # -- Eligibility proxy: apgar1 > 6 OR resus == "N" -----------------------
-    eligible = case_when(
+    # -- Eligibility: "Did baby require immediate resuscitation? = No" -------
+    # Primary/reported definition, in step with Scripts 23/24/25.
+    eligible = resus == "N",
+    # Broader proxy, cross-check only -- NOT used for the primary tables below.
+    eligible_broadproxy = case_when(
       !is.na(apgar1_num) & apgar1_num > 6 ~ TRUE,
       resus == "N"                         ~ TRUE,
       TRUE                                 ~ FALSE
@@ -438,7 +448,7 @@ cat(sprintf("  Total rows (all neotreeoutcome)   : %d\n",
             nrow(mo %>% filter(facility == "SMCH",
                                adm_date >= INT_START, adm_date <= INT_END))))
 cat(sprintf("  Live births (LB + ENND)           : %d\n", nrow(mo_int)))
-cat(sprintf("  Eligible proxy (apgar1>6 or N-resus): %d (%.1f%% of live births)\n",
+cat(sprintf("  Eligible (resus == N)             : %d (%.1f%% of live births)\n",
             sum(mo_int$eligible, na.rm = TRUE),
             100 * mean(mo_int$eligible, na.rm = TRUE)))
 cat(sprintf("  LBW (bwtdis < 2500 g)             : %d (%.1f%% of live births)\n",
@@ -467,7 +477,7 @@ cat(sprintf("Overall maternal script S2S uptake (n known = %d): %d / %d (%.1f%%)
 mo_elig <- mo_int %>% filter(eligible == TRUE)
 n_elig_dcc <- sum(mo_elig$dcc_known, na.rm = TRUE)
 n_elig_s2s <- sum(mo_elig$s2s_known, na.rm = TRUE)
-cat(sprintf("\nAmong eligible (apgar1>6 or no resus, n=%d):\n", nrow(mo_elig)))
+cat(sprintf("\nAmong eligible (resus == N, n=%d):\n", nrow(mo_elig)))
 cat(sprintf("  DCC uptake (n known = %d): %d / %d (%.1f%%)\n",
             n_elig_dcc,
             sum(mo_elig$dcc_received, na.rm = TRUE), n_elig_dcc,
@@ -536,6 +546,29 @@ mo_monthly <- mo_monthly %>%
 print(mo_monthly, n = Inf)
 write_csv(mo_monthly, file.path(OUTPUT_DIR, "08b_maternal_monthly_uptake.csv"))
 cat("\nSaved: 08b_maternal_monthly_uptake.csv\n")
+
+# -- Cross-check only: broader apgar1>6 OR resus=="N" proxy ------------------
+# Not used for the primary table above; kept so the effect of the broader
+# proxy on the eligible count can be seen directly.
+mo_monthly_broadproxy <- mo_int %>%
+  filter(eligible_broadproxy == TRUE) %>%
+  group_by(month_label) %>%
+  summarise(
+    n_eligible_broadproxy = n(),
+    n_dcc_Y     = sum(dcc_received, na.rm = TRUE),
+    n_dcc_known = sum(dcc_known,    na.rm = TRUE),
+    pct_dcc_uptake = if_else(n_dcc_known > 0,
+                             round(100 * n_dcc_Y / n_dcc_known, 1), NA_real_),
+    n_s2s_Y     = sum(s2s_received, na.rm = TRUE),
+    n_s2s_known = sum(s2s_known,    na.rm = TRUE),
+    pct_s2s_uptake = if_else(n_s2s_known > 0,
+                             round(100 * n_s2s_Y / n_s2s_known, 1), NA_real_),
+    .groups = "drop"
+  ) %>%
+  arrange(month_label)
+write_csv(mo_monthly_broadproxy,
+          file.path(OUTPUT_DIR, "08h_maternal_monthly_uptake_broadproxy_crosscheck.csv"))
+cat("Saved: 08h_maternal_monthly_uptake_broadproxy_crosscheck.csv (cross-check only)\n")
 
 # -- Documentation quality: unknown rate trend --------------------------------
 cat("\n--- Documentation quality: DCC unknown rate (U + not_recorded) by month ---\n")
@@ -625,7 +658,7 @@ p_mo <- ggplot(mo_monthly_long,
   ) +
   labs(
     title    = "Maternal Outcome Script: DCC and S2S Uptake by Month",
-    subtitle = paste0("SMCH eligible live births (apgar1 > 6 or no resus), ",
+    subtitle = paste0("SMCH eligible live births (resus == N), ",
                       INT_START, " to ", INT_END,
                       "\nDenominator: babies with known status (Y or N; excludes Unknown and not recorded)"),
     caption  = "Note: n = DCC known denominator; uptake = Y / (Y+N)"
@@ -706,7 +739,7 @@ cat("=============================================================\n\n")
 mo_lbw <- mo_int %>%
   filter(lbw == TRUE, eligible == TRUE)
 
-cat(sprintf("LBW eligible babies (bwtdis < 2500 g, apgar1>6 or no resus): %d\n",
+cat(sprintf("LBW eligible babies (bwtdis < 2500 g, resus == N): %d\n",
             nrow(mo_lbw)))
 cat(sprintf("  As %% of all eligible live births: %.1f%%\n",
             100 * nrow(mo_lbw) / nrow(mo_elig)))
@@ -809,7 +842,7 @@ p_lbw <- ggplot(lbw_monthly_long,
   labs(
     title    = "LBW Subgroup: DCC and S2S Uptake by Month",
     subtitle = paste0("Maternal outcome script, SMCH; LBW eligible babies (bwtdis < 2500 g,\n",
-                      "apgar1 > 6 or no resus), ", INT_START, " to ", INT_END,
+                      "resus == N), ", INT_START, " to ", INT_END,
                       "\nDenominator: LBW babies with known status (Y or N)"),
     caption  = "Note: n = DCC known denominator (LBW subset)"
   ) +

@@ -12,7 +12,11 @@
 #   Data source : zim_db_maternal_outcomes_20260501_cleaned.csv.
 #   Population  : maternal outcome script (delivery log), facility SMCH,
 #                 live births (neotreeoutcome LB or ENND).
-#   Eligibility : apgar1 > 6 OR resus == "N".
+#   Eligibility : resus == "N" ("Did baby require immediate resuscitation? =
+#                 No") -- the confirmed primary/reported definition. A
+#                 broader apgar1>6 OR resus=="N" proxy is also computed and
+#                 written to a separate, clearly-labelled cross-check output
+#                 only; it is not used for the primary table.
 #   Status      : Y = received, N = not received, U = unknown,
 #                 "" / NA = not recorded (reported separately from U --
 #                 "no status recorded" and "recorded as unknown" are
@@ -21,8 +25,9 @@
 #   this one) and "extended" (1 Nov 2024 - 31 Mar 2026).
 #
 # Outputs (to ./outputs/):
-#   25a_documentation_all_vs_eligible_<window>.csv  -- wide, all vs eligible
-#   25b_documentation_ineligible_<window>.csv       -- the remainder only
+#   25a_documentation_all_vs_eligible_<window>.csv  -- wide, all vs eligible (primary, resus=="N")
+#   25b_documentation_ineligible_<window>.csv       -- the remainder only (primary, resus=="N")
+#   25c_documentation_broadproxy_crosscheck_<window>.csv -- cross-check only, apgar1>6 OR resus=="N"
 #   25_documentation_all_babies_log.txt
 #
 # DSH note: script is ASCII-only.
@@ -56,7 +61,11 @@ df <- raw %>%
     month_label = format(adm_date, "%Y-%m"),
     live_birth = neotreeoutcome %in% c("LB", "ENND"),
     apgar1_num = suppressWarnings(as.numeric(apgar1)),
-    eligible = case_when(
+    # Primary/reported eligibility: "Did baby require immediate
+    # resuscitation? = No". Kept in step with Scripts 22/23.
+    eligible = resus == "N",
+    # Broader proxy, cross-check only -- NOT used for the primary table.
+    eligible_broadproxy = case_when(
       !is.na(apgar1_num) & apgar1_num > 6 ~ TRUE,
       resus == "N"                        ~ TRUE,
       TRUE                                ~ FALSE),
@@ -114,6 +123,18 @@ build <- function(end_date, tag) {
             sprintf("25a_documentation_all_vs_eligible_%s.csv", tag)))
   write_csv(inel_b, file.path(OUTPUT_DIR,
             sprintf("25b_documentation_ineligible_%s.csv", tag)))
+
+  # -- Cross-check only: broader apgar1>6 OR resus=="N" proxy ----------------
+  # Not used for the primary table above; kept so the effect of the broader
+  # proxy on the eligible count can be seen directly.
+  elig_bp <- status_block(base %>% filter(eligible_broadproxy == TRUE), "eligible_broadproxy")
+  crosscheck <- all_b %>%
+    left_join(elig_bp, by = "month_label") %>%
+    rename(n_live_births = n_all, n_eligible_broadproxy = n_eligible_broadproxy) %>%
+    relocate(month_label, n_live_births, n_eligible_broadproxy)
+  write_csv(crosscheck, file.path(OUTPUT_DIR,
+            sprintf("25c_documentation_broadproxy_crosscheck_%s.csv", tag)))
+
   wide
 }
 

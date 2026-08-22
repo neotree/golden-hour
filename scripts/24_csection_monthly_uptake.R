@@ -12,9 +12,12 @@
 #                 live births (neotreeoutcome LB or ENND), delivered by
 #                 Caesarean section (modedelivery 4 or 5 -- elective and
 #                 emergency combined).
-#   Eligibility : apgar1 > 6 OR resus == "N". NOTE: this differs from the
-#                 stricter resus == "N" only definition used for Table 1
-#                 (Script 23); both are reported in the log for comparison.
+#   Eligibility : resus == "N" ("Did baby require immediate resuscitation? =
+#                 No") -- the confirmed primary/reported definition, in step
+#                 with Table 1 (Script 25) and Table 4 (Script 23). A
+#                 broader apgar1>6 OR resus=="N" proxy is also computed and
+#                 written to a separate, clearly-labelled cross-check output
+#                 only; it is not used for the primary table.
 #   Status      : dcc / s2s coded Y = received, N = not received,
 #                 U = unknown, "" / NA = not recorded.
 #   Percentages (per month, Caesarean eligible babies):
@@ -25,9 +28,9 @@
 #   this one) and "extended" (1 Nov 2024 - 31 Mar 2026).
 #
 # Outputs (to ./outputs/):
-#   24a_csection_monthly_uptake_12mo.csv
-#   24a_csection_monthly_uptake_extended.csv
-#   24b_csection_monthly_uptake_12mo_resusonly.csv
+#   24a_csection_monthly_uptake_12mo.csv       (primary, resus=="N")
+#   24a_csection_monthly_uptake_extended.csv   (primary, resus=="N")
+#   24b_csection_monthly_uptake_12mo_broadproxy.csv  (cross-check, apgar1>6 OR resus=="N")
 #   24_csection_monthly_uptake_log.txt
 #
 # DSH note: script is ASCII-only.
@@ -63,11 +66,14 @@ df <- raw %>%
     month_label = format(adm_date, "%Y-%m"),
     live_birth = neotreeoutcome %in% c("LB", "ENND"),
     apgar1_num = suppressWarnings(as.numeric(apgar1)),
-    eligible = case_when(
+    # Primary/reported eligibility: "Did baby require immediate
+    # resuscitation? = No". Kept in step with Scripts 23/25.
+    eligible = resus == "N",
+    # Broader proxy, cross-check only -- NOT used for the primary table.
+    eligible_broadproxy = case_when(
       !is.na(apgar1_num) & apgar1_num > 6 ~ TRUE,
       resus == "N"                        ~ TRUE,
       TRUE                                ~ FALSE),
-    eligible_resus_only = resus == "N" & !is.na(resus),   # Table 1 definition
     caesarean = modedelivery %in% c("4", "5"),
     dcc_Y = dcc == "Y", dcc_N = dcc == "N", dcc_U = dcc == "U",
     dcc_NR = is.na(dcc) | trimws(dcc) == "",
@@ -128,16 +134,16 @@ cat(sprintf("    modedelivery == 4                              : %d\n",
             sum(ctx$modedelivery == "4", na.rm = TRUE)))
 cat(sprintf("    modedelivery == 5                              : %d\n",
             sum(ctx$modedelivery == "5", na.rm = TRUE)))
-cat(sprintf("  Caesarean AND eligible (apgar1>6 OR resus=N)     : %d\n",
+cat(sprintf("  Caesarean AND eligible (resus=N only, primary def)  : %d\n",
             sum(ctx$caesarean & ctx$eligible, na.rm = TRUE)))
-cat(sprintf("  Caesarean AND eligible (resus=N only, Table 1 def): %d\n",
-            sum(ctx$caesarean & ctx$eligible_resus_only, na.rm = TRUE)))
+cat(sprintf("  Caesarean AND eligible (apgar1>6 OR resus=N, broad) : %d\n",
+            sum(ctx$caesarean & ctx$eligible_broadproxy, na.rm = TRUE)))
 
-# Same table under the Table 1 (resus-only) eligibility, for cross-checking
-# against Table 1's Caesarean row.
-tb_alt <- monthly_cs(END_12MO, "eligible_resus_only")
-write_csv(tb_alt, file.path(OUTPUT_DIR, "24b_csection_monthly_uptake_12mo_resusonly.csv"))
-cat("\nAlso saved 24b (same table, resus-only eligibility) to reconcile with Table 1.\n")
+# Same table under the broader apgar1>6 OR resus=="N" proxy, cross-check
+# only -- shows the effect of the broader proxy on the Caesarean table.
+tb_alt <- monthly_cs(END_12MO, "eligible_broadproxy")
+write_csv(tb_alt, file.path(OUTPUT_DIR, "24b_csection_monthly_uptake_12mo_broadproxy.csv"))
+cat("\nAlso saved 24b (same table, broader apgar1>6 OR resus=N proxy) as a cross-check.\n")
 cat("TOTAL row of 24b:\n")
 print(as.data.frame(tb_alt %>% filter(month_label == "TOTAL")), row.names = FALSE)
 

@@ -17,8 +17,8 @@ from.
 | Table 1 — Documentation by month of DCC/ESSC status, all live births | `25_documentation_all_babies.R` | `25a_documentation_all_vs_eligible_12mo.csv` |
 | Table 1a — DCC among eligible LBW infants, by month | `27_lbw_monthly_uptake.R` | `27a_lbw_monthly_uptake_table1def.csv` |
 | Table 1b — ESSC among eligible LBW infants, by month | `27_lbw_monthly_uptake.R` | `27b_lbw_monthly_uptake_table2def.csv` |
-| Table 2a — DCC among eligible caesarean births, by month | `24_csection_monthly_uptake.R` | `24a_csection_monthly_uptake_extended.csv` |
-| Table 2b — ESSC among eligible caesarean births, by month | `24_csection_monthly_uptake.R` | `24a_csection_monthly_uptake_extended.csv` |
+| Table 2a — DCC among eligible caesarean births, by month | `24_csection_monthly_uptake.R` | `24a_csection_monthly_uptake_12mo.csv` |
+| Table 2b — ESSC among eligible caesarean births, by month | `24_csection_monthly_uptake.R` | `24a_csection_monthly_uptake_12mo.csv` |
 | Table 3a — Odds ratios for death before discharge, by intervention group | `18_outcome_or_and_sensitivity.R` | `18a_or_full_models.csv`, `18b_or_table4.csv` |
 | Table 4 — Uptake by mode of delivery, birth weight, gestational age | `23_table1_maternal_uptake_12mo.R` | `23a_table1_maternal_uptake_12mo.csv` |
 | Table 5 — Characteristics of the eligible NICU cohort, by intervention group | `17_eligible_cohort_tables.R` | `17a_table2_characteristics.csv`, `17c_table3_outcomes.csv` |
